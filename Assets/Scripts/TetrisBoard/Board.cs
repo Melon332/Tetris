@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using Tiles;
+
 
 namespace TetrisBoard
 {
@@ -122,20 +123,48 @@ namespace TetrisBoard
                 }
             }
 
+            bool found = false;
+
             //Copy all the non zero rows into the temporary list
             for (int i = 0; i < rows; i++)
             {
-                if (board[i][0] != 0)
+                for (int j = 0; j < cols; j++)
+                {
+                    found = board[i][j] != 0;
+                    if (found)
+                    {
+                        break;
+                    }
+                }
+                if (found)
                 {
                     tempList.Add(board[i]);
                 }
-
-                if (board[i][0] == 0)
+                else
                 {
                     rowsDeleted.Add(i);
                 }
             }
             board = tempList;
+        }
+
+        public int CalculateStepsTileCanMove(int rowStartPos, int columnPos, List<Tile[]> tilesList)
+        {
+            if (tilesList[rowStartPos][columnPos] == null)
+            {
+                Debug.LogWarning("The specified tile is currently empty!");
+                return 0;
+            }
+            int stepsToMove = 0;
+            for (int i = rowStartPos; i > 0; i--)
+            {
+                if (tilesList[i][columnPos] == null)
+                {
+                    stepsToMove++;
+                }
+            }
+
+            return stepsToMove;
         }
 
     }

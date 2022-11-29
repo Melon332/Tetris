@@ -15,8 +15,8 @@ namespace Tiles
     
     public class TilesData
     {
-        public int posX { private set; get; }
-        public int posY { private set; get; }
+        public int posX { set; get; }
+        public int posY { set; get; }
 
         public eShape shape;
 

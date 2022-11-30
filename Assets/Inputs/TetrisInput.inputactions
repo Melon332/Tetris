@@ -1,0 +1,54 @@
+{
+    "name": "TetrisInput",
+    "maps": [
+        {
+            "name": "TetrisMap",
+            "id": "9533b022-09e4-445a-a3b9-e3659d06fb1b",
+            "actions": [
+                {
+                    "name": "Left",
+                    "type": "Button",
+                    "id": "f5721982-8684-49f9-ad3c-ac33e90440f1",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Right",
+                    "type": "Button",
+                    "id": "6f0038e8-de05-4031-889f-5de6661906f0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "cd58eae4-8768-42c4-94b1-8adefaf1efa7",
+                    "path": "<Keyboard>/leftArrow",
+                    "interactions": "Hold(pressPoint=0.01)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Left",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0df796f7-416d-4c9c-a9ff-827be721f61e",
+                    "path": "<Keyboard>/rightArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Right",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

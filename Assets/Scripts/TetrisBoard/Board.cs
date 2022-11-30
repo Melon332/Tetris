@@ -8,6 +8,8 @@ namespace TetrisBoard
 {
     public class Board
     {
+        private List<TilesData> currentTileSetData = new List<TilesData>();
+        
         private List<int[]> board;
 
         private int cols;
@@ -25,20 +27,65 @@ namespace TetrisBoard
             }
         }
 
+        public void SpawnDataTile(eShape shape)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                TilesData tempData = new TilesData(shape, 0, i);
+                currentTileSetData.Add(tempData);
+                MapGridFromUIGrid(currentTileSetData[i].posX, i, false);
+            }
+            //MoveTileSetDownwards(currentTileSetData);
+        }
 
+        public List<TilesData> GetCurrentTileSetData()
+        {
+            return currentTileSetData;
+        }
+
+        private void MoveTileSetDownwards(List<TilesData> tilesData)
+        {
+            for (int i = tilesData.Count - 1; i >= 0; i--)
+            {
+                if (CheckIfTileCanMoveDown(tilesData[i].posY, tilesData[i].posX))
+                {
+                    board[tilesData[i].posY][tilesData[i].posX] = 0;
+                    tilesData[i].SetPosition(tilesData[i].posX, ++tilesData[i].posY);
+                    MapGridFromUIGrid(tilesData[i].posX, tilesData[i].posY, false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// left is -1 and right is 1 anything beside that will be discarded and the function will return
+        /// </summary>
+        /// <param name="tilesData"></param>
+        /// <param name="leftOrRight"></param>
+        private void MoveSideToSide(List<TilesData> tilesData, EMoveTiles eMoveTiles)
+        {
+            for (int i = tilesData.Count - 1; i >= 0; i--)
+            {
+                if (CheckIfTileCanMoveSideWays(tilesData[i].posY, tilesData[i].posX, eMoveTiles))
+                {
+                    Debug.LogWarning("moved to the side!");
+                    board[tilesData[i].posY][tilesData[i].posX] = 0;
+                    tilesData[i].SetPosition(++tilesData[i].posX, tilesData[i].posY);
+                    MapGridFromUIGrid(tilesData[i].posX, tilesData[i].posY, false);
+                }
+            }
+        }
         public List<int[]> GetGrid()
         {
             return board;
         }
 
-        public void MapGridFromUIGrid(int posX, int posY, int value)
+        public void MapGridFromUIGrid(int posX, int posY, bool isEmpty)
         {
-            board[posY][posX] = value;
+            board[posY][posX] = isEmpty ? 0 : 1;
         }
 
         public void PrintAllDataFromArray()
         {
-            if (!IsEmpty()) return;
             string someBuilder = "";
             for (int i = 0; i < rows; i++)
             {
@@ -107,6 +154,29 @@ namespace TetrisBoard
                 }
             }
             return spaceUnder;
+        }
+        
+        private bool CheckIfTileCanMoveDown(int rowPos, int columnPos)
+        {
+            if (rowPos + 1 >= rows) return false;
+            return board[rowPos + 1][columnPos] == 0;
+        }
+        
+        private bool CheckIfTileCanMoveSideWays(int rowPos, int columnPos, EMoveTiles eMoveTiles)
+        {
+            switch (eMoveTiles)
+            {
+                case EMoveTiles.ELeft:
+                    if (columnPos - 1 <= cols) return false;
+                    return board[rowPos][columnPos - 1] == 0;
+                    break;
+                case EMoveTiles.ERight:
+                    if (columnPos + 1 >= cols) return false;
+                    return board[rowPos][columnPos + 1] == 0;
+                    break;
+                default: return false;
+                    break;
+            }
         }
 
         public void MoveAllTilesDownOneStep(int rowsEmpty, out List<int> rowsDeleted)
@@ -178,6 +248,11 @@ namespace TetrisBoard
             }
             Debug.Log("The board is empty");
             return true;
+        }
+        enum EMoveTiles
+        {
+            ERight,
+            ELeft
         }
     }
 }

@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using TetrisBoard;
 using UnityEngine;
 using Tiles;
 using Player;
+using Random = UnityEngine.Random;
 
 namespace Managers
 {
@@ -19,12 +22,16 @@ namespace Managers
 
         //TODO: Make this a list afterwards
         [SerializeField] private Tile tilesList;
+        
+        [SerializeField] private int stepsPerSecond = 0; //TODO: Use this when we implement the update loop for moving the tile by itself
 
         public static int YAxisEnd = 0;
 
         private PlayerClass player;
 
-        private Tile currentTile = null;
+        private List<Tile> CurrentTileSet = new List<Tile>();
+        
+        
 
         void Start()
         {
@@ -33,22 +40,21 @@ namespace Managers
             tetrisBoard = new Board(colAmount, rowAmount);
 
             player = FindObjectOfType<PlayerClass>();
-            /*
-            tetrisBoard.PrintAllDataFromArray();
-            CheckRowPairs(out List<int> rowsBroke);
-
-
-            tetrisBoard.PrintAllDataFromArray();
-
-            MoveTilesDown(rowsBroke);
-            tetrisBoard.PrintAllDataFromArray();
-            */
 
             SpawnTileSet(tilesList);
             
             tetrisBoard.PrintAllDataFromArray();
         }
+        /*
+        tetrisBoard.PrintAllDataFromArray();
+        CheckRowPairs(out List<int> rowsBroke);
 
+
+        tetrisBoard.PrintAllDataFromArray();
+
+        MoveTilesDown(rowsBroke);
+        tetrisBoard.PrintAllDataFromArray();
+        */
 
         private void SpawnGrid()
         {
@@ -61,11 +67,11 @@ namespace Managers
                     SpawnTile(new Vector2(startPos.x + columns, startPos.y + rows), columns, rows);
                     if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
                     {
-                        tetrisBoard.MapGridFromUIGrid(columns, rows, valueOfGrid);
+                        tetrisBoard.MapGridFromUIGrid(columns, rows, false);
                     }
                     else
                     {
-                        tetrisBoard.MapGridFromUIGrid(columns, rows, Random.Range(1, 99));
+                        tetrisBoard.MapGridFromUIGrid(columns, rows, true);
                     }
                 }
 
@@ -90,42 +96,40 @@ namespace Managers
             gameObject.name = $"tile[{posY}][{posX}]";
             gameObject.transform.transform.position = new Vector3(pos.x, pos.y, 0);
             runtimeTileList[posY][posX] = tile;
-            tile.Init(posX, posY);
         }
 
         private void SpawnTileSet(Tile tileToSpawn)
         {
+            //Everytime we instaniate a new tile, we should set the y axis to zero as
+            //All tiles have different y values
+            YAxisEnd = 0;
             if (StartPosition == null)
             {
                 Debug.LogWarning("You forgot to add a start location for the tiles! Exiting...");
                 return;
             }
-            var tile = Instantiate(tileToSpawn);
-            tile.Init(0,0);
-            tile.SetPosition(StartPosition.transform.position.x, StartPosition.transform.position.y);
-            switch (tile.GetTilesData().shape)
+            //Initalize the tile to start from the left top
+            for (int i = 0; i < 4; i++)
             {
-                case eShape.eIShape:
-                for (int i = 0; i < 4; i++)
-                {
-                    tetrisBoard.MapGridFromUIGrid(0, i, 1);
-                }
-
-                break;
-                default: Debug.LogWarning("Shape does not exist!");
-                    break;
+                var tile = Instantiate(tileToSpawn);
+                tile.Init();
+                tile.SetPosition(StartPosition.transform.position.x, StartPosition.transform.position.y - i);
+                CurrentTileSet.Add(tile);
             }
-
-            currentTile = tile;
-            /*
-            List<int> tilesBroken = new List<int>();
-            CheckRowPairs(out tilesBroken);
-            */
+            tetrisBoard.SpawnDataTile(eShape.eIShape);
+            
+            InitalizeCurrentTileSet(tetrisBoard.GetCurrentTileSetData());
         }
 
-        private void MoveTileSideWays(int movementValue)
+        private void InitalizeCurrentTileSet(List<TilesData> tilesData)
         {
-            
+            if (!CurrentTileSet.Any()) return;
+            for (int i = 0; i < tilesData.Count; i++)
+            {
+                CurrentTileSet[i].SetTileData(tilesData[i]);
+                Debug.LogWarning($"Just to make sure it actually worked: posX: {CurrentTileSet[i].GetTilesData().posX} and posY: {CurrentTileSet[i].GetTilesData().posY}");
+                CurrentTileSet[i].SetPosition(StartPosition.transform.position.x - CurrentTileSet[i].GetTilesData().posX, StartPosition.transform.position.y - CurrentTileSet[i].GetTilesData().posY );
+            }
         }
 
         private void InitalizeTileList()
@@ -135,6 +139,12 @@ namespace Managers
             {
                 runtimeTileList.Add(new Tile[colAmount]);
             }
+        }
+
+        [ContextMenu("Print data")]
+        private void TestMethod()
+        {
+            tetrisBoard.PrintAllDataFromArray();
         }
 
         private void CheckRowPairs(out List<int> tiles)
@@ -153,6 +163,10 @@ namespace Managers
             }
         }
 
+        /// <summary>
+        /// Moves tiles down after a successful row pair
+        /// </summary>
+        /// <param name="tileRowBroken"></param>
         private void MoveTilesDown(List<int> tileRowBroken = null)
         {
             if (tileRowBroken == null || tileRowBroken.Count == 0) return;

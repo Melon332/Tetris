@@ -19,12 +19,28 @@ namespace Tiles
         public int posY { set; get; }
 
         public eShape shape;
+        
+        public int lengthInX { set; get; }
 
         public TilesData(eShape _shape, int _posX, int _posY)
         {
             posX = _posX;
             posY = _posY;
             shape = _shape;
+            switch (shape)
+            {
+                case eShape.eIShape:
+                    lengthInX = 1;
+                    break;
+                default: Debug.LogWarning("The shape doesn't exist!");
+                    break;
+            }
+        }
+
+        public void SetPosition(int _posX, int _posY)
+        {
+            posX = _posX;
+            posY = _posY;
         }
     }
 }

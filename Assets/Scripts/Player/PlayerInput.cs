@@ -9,8 +9,9 @@ namespace Player
     {
         private TetrisInput inputs;
 
-        public Action OnLeftPressed;
-        public Action OnRightPressed;
+        public Action<int> OnLeftPressed;
+        public Action<int> OnRightPressed;
+        public Action OnDownPressed;
 
         private void Start()
         {
@@ -23,7 +24,7 @@ namespace Player
         {
             if (context.phase == InputActionPhase.Started)
             {
-                OnLeftPressed?.Invoke();
+                OnLeftPressed?.Invoke(-1);
                 Debug.LogWarning("I pressed left once!");
             }
         }
@@ -32,8 +33,17 @@ namespace Player
         {
             if (context.phase == InputActionPhase.Started)
             {
-                OnRightPressed?.Invoke();
-                Debug.LogWarning("I pressed right once!");   
+                OnRightPressed?.Invoke(1);
+                Debug.LogWarning("I pressed right once!");
+            }
+        }
+
+        public void OnDown(InputAction.CallbackContext context)
+        {
+            if (context.phase == InputActionPhase.Started)
+            {
+                OnDownPressed?.Invoke();
+                Debug.LogWarning("I pressed down once!");
             }
         }
     }

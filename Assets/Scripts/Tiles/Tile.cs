@@ -17,8 +17,13 @@ namespace Tiles
         public void MoveTile(int posY, int newPosY)
         {
             tileTransform.position = new Vector3(tileTransform.position.x, tileTransform.position.y - posY , 0);
-            tileData.posX = newPosY;
-            gameObject.name = $"tile[{tileData.posX}][{tileData.posY}]";
+            tileData.posY = newPosY;
+            gameObject.name = $"tile[{tileData.posY}][{tileData.posX}]";
+        }
+
+        public void SetPosition(float posX, float posY)
+        {
+            tileTransform.position = new Vector3(posX, posY , 0);
         }
 
         public TilesData GetTilesData()

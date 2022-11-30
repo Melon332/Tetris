@@ -9,6 +9,8 @@ namespace Managers
     {
         private Board tetrisBoard;
 
+        [SerializeField] private Transform StartPosition;
+
         [SerializeField] private int rowAmount;
         [SerializeField] private int colAmount;
 
@@ -17,31 +19,17 @@ namespace Managers
         //TODO: Make this a list afterwards
         [SerializeField] private Tile tilesList;
 
+        public static int YAxisEnd = 0;
+
         void Start()
         {
             InitalizeTileList();
             int someInt = 1;
-            Vector2 startPos = new Vector2(-4, 0);
-            tetrisBoard = new Board(rowAmount, colAmount);
+            
+            tetrisBoard = new Board(colAmount, rowAmount);
 
-            for (int rows = 0; rows < rowAmount; rows++)
-            {
-                for (int columns = 0; columns < colAmount; columns++)
-                {
-                    SpawnGrid(new Vector2(startPos.x + rows, startPos.y + columns), columns, rows);
-                    if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
-                    {
-                        tetrisBoard.MapGridToUIGrid(rows, columns, someInt);
-                    }
-                    else
-                    {
-                        tetrisBoard.MapGridToUIGrid(rows, columns, Random.Range(1, 99));
-                    }
-                }
 
-                someInt++;
-            }
-
+            /*
             tetrisBoard.PrintAllDataFromArray();
             CheckRowPairs(out List<int> rowsBroke);
 
@@ -50,16 +38,82 @@ namespace Managers
 
             MoveTilesDown(rowsBroke);
             tetrisBoard.PrintAllDataFromArray();
+            */
+
+            SpawnTileSet(tilesList);
+            
+            tetrisBoard.PrintAllDataFromArray();
         }
 
-        private void SpawnGrid(Vector2 pos, int posX, int posY)
+
+        private void SpawnGrid()
+        {
+            Vector2 startPos = new Vector2(-4, 0);
+            int valueOfGrid = 1;     
+            for (int rows = 0; rows < rowAmount; rows++)
+            {
+                for (int columns = 0; columns < colAmount; columns++)
+                {
+                    SpawnTile(new Vector2(startPos.x + columns, startPos.y + rows), columns, rows);
+                    if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
+                    {
+                        tetrisBoard.MapGridFromUIGrid(columns, rows, valueOfGrid);
+                    }
+                    else
+                    {
+                        tetrisBoard.MapGridFromUIGrid(columns, rows, Random.Range(1, 99));
+                    }
+                }
+
+                valueOfGrid++;
+            }
+            
+        }
+
+        
+        /// <summary>
+        /// This is for testing purposes.
+        /// Will spawn a tile at the specified vector2
+        /// and give it the values of posX and posY to store.
+        /// </summary>
+        /// <param name="pos"></param>
+        /// <param name="posX"></param>
+        /// <param name="posY"></param>
+        private void SpawnTile(Vector2 pos, int posX, int posY)
         {
             var tile = Instantiate(tilesList);
             var gameObject = tile.gameObject;
-            gameObject.name = $"tile[{posX}][{posY}]";
+            gameObject.name = $"tile[{posY}][{posX}]";
             gameObject.transform.transform.position = new Vector3(pos.x, pos.y, 0);
-            runtimeTileList[posX][posY] = tile;
+            runtimeTileList[posY][posX] = tile;
             tile.Init(posX, posY);
+        }
+
+        private void SpawnTileSet(Tile tileToSpawn)
+        {
+            if (StartPosition == null)
+            {
+                Debug.LogWarning("You forgot to add a start location for the tiles! Exiting...");
+                return;
+            }
+            var tile = Instantiate(tileToSpawn);
+            tile.Init(0,0);
+            tile.SetPosition(StartPosition.transform.position.x, StartPosition.transform.position.y);
+            switch (tile.GetTilesData().shape)
+            {
+                case eShape.eIShape:
+                for (int i = 0; i < 4; i++)
+                {
+                    tetrisBoard.MapGridFromUIGrid(0, i, 1);
+                }
+
+                break;
+                default: Debug.LogWarning("Shape does not exist!");
+                    break;
+            }
+            
+            List<int> tilesBroken = new List<int>();
+            CheckRowPairs(out tilesBroken);
         }
 
         private void InitalizeTileList()
@@ -127,7 +181,7 @@ namespace Managers
                     //Get the tiles data to access the x and y position of the current tile.
                     //They are stored and changed when the tile gets moved.
                     TilesData data = currentTile.GetTilesData();
-                    runtimeTileList[data.posX][data.posY] = currentTile;
+                    runtimeTileList[data.posY][data.posX] = currentTile;
                     runtimeTileList[i][j] = null;
                 }
             }

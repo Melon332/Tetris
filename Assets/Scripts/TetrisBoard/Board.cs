@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Tiles;
 
@@ -30,13 +31,14 @@ namespace TetrisBoard
             return board;
         }
 
-        public void MapGridToUIGrid(int posX, int posY, int value)
+        public void MapGridFromUIGrid(int posX, int posY, int value)
         {
-            board[posX][posY] = value;
+            board[posY][posX] = value;
         }
 
         public void PrintAllDataFromArray()
         {
+            if (!IsEmpty()) return;
             string someBuilder = "";
             for (int i = 0; i < rows; i++)
             {
@@ -55,6 +57,7 @@ namespace TetrisBoard
         public void CheckForRowPair(out List<int> pairNumbers)
         {
             pairNumbers = new List<int>();
+            if (!IsEmpty()) return;
             int sameValues = 0;
             for (int i = 0; i < rows; i++)
             {
@@ -167,5 +170,14 @@ namespace TetrisBoard
             return stepsToMove;
         }
 
+        public bool IsEmpty()
+        {
+            if (board.Any(p => p[0] > 0) )
+            {
+                return false;
+            }
+            Debug.Log("The board is empty");
+            return true;
+        }
     }
 }

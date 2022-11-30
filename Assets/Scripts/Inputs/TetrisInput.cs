@@ -53,7 +53,7 @@ namespace Inputs
                     ""name"": """",
                     ""id"": ""cd58eae4-8768-42c4-94b1-8adefaf1efa7"",
                     ""path"": ""<Keyboard>/leftArrow"",
-                    ""interactions"": ""Hold(pressPoint=0.01)"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Left"",

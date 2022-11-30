@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TetrisBoard;
 using UnityEngine;
 using Tiles;
+using Player;
 
 namespace Managers
 {
@@ -21,14 +22,17 @@ namespace Managers
 
         public static int YAxisEnd = 0;
 
+        private PlayerClass player;
+
+        private Tile currentTile = null;
+
         void Start()
         {
             InitalizeTileList();
-            int someInt = 1;
-            
+
             tetrisBoard = new Board(colAmount, rowAmount);
 
-
+            player = FindObjectOfType<PlayerClass>();
             /*
             tetrisBoard.PrintAllDataFromArray();
             CheckRowPairs(out List<int> rowsBroke);
@@ -111,9 +115,17 @@ namespace Managers
                 default: Debug.LogWarning("Shape does not exist!");
                     break;
             }
-            
+
+            currentTile = tile;
+            /*
             List<int> tilesBroken = new List<int>();
             CheckRowPairs(out tilesBroken);
+            */
+        }
+
+        private void MoveTileSideWays(int movementValue)
+        {
+            
         }
 
         private void InitalizeTileList()

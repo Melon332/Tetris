@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -15,6 +16,17 @@ namespace TetrisBoard
         private int cols;
         private int rows;
 
+        public readonly Action PlayerInputMoveDown;
+        public readonly Action<EMoveTiles> PlayerInputMoveSideWays;
+
+        public Action<List<TilesData>> UpdateGraphics;
+
+        public Action GotBlocked;
+
+        public Action<int, int> UpdateRunTimeList;
+
+        public bool hasHitSomething { private get; set; }
+
         public Board(int _cols, int _rows)
         {
             rows = _rows;
@@ -25,6 +37,11 @@ namespace TetrisBoard
                 int[] tempArray = new int[cols];
                 board.Add(tempArray);
             }
+
+            PlayerInputMoveDown += MoveTileSetDownwards;
+            PlayerInputMoveSideWays += MoveSideToSide;
+            GotBlocked += ClearCurrentTileSet;
+            GotBlocked += ResetBoolValue;
         }
 
         public void SpawnDataTile(eShape shape)
@@ -35,7 +52,11 @@ namespace TetrisBoard
                 currentTileSetData.Add(tempData);
                 MapGridFromUIGrid(currentTileSetData[i].posX, i, false);
             }
-            //MoveTileSetDownwards(currentTileSetData);
+        }
+
+        private void ResetBoolValue()
+        {
+            hasHitSomething = false;
         }
 
         public List<TilesData> GetCurrentTileSetData()
@@ -43,36 +64,48 @@ namespace TetrisBoard
             return currentTileSetData;
         }
 
-        private void MoveTileSetDownwards(List<TilesData> tilesData)
+        private void MoveTileSetDownwards()
         {
-            for (int i = tilesData.Count - 1; i >= 0; i--)
+            if (!currentTileSetData.Any()) return;
+            for (int i = currentTileSetData.Count - 1; i >= 0; i--)
             {
-                if (CheckIfTileCanMoveDown(tilesData[i].posY, tilesData[i].posX))
+                if (CheckIfTileCanMoveDown(currentTileSetData[i].posY, currentTileSetData[i].posX))
                 {
-                    board[tilesData[i].posY][tilesData[i].posX] = 0;
-                    tilesData[i].SetPosition(tilesData[i].posX, ++tilesData[i].posY);
-                    MapGridFromUIGrid(tilesData[i].posX, tilesData[i].posY, false);
+                    board[currentTileSetData[i].posY][currentTileSetData[i].posX] = 0;
+                    currentTileSetData[i].SetPosition(currentTileSetData[i].posX, ++currentTileSetData[i].posY);
+                    MapGridFromUIGrid(currentTileSetData[i].posX, currentTileSetData[i].posY, false);
                 }
             }
+            UpdateGraphics.Invoke(currentTileSetData);
+            PrintAllDataFromArray();
         }
 
-        /// <summary>
-        /// left is -1 and right is 1 anything beside that will be discarded and the function will return
-        /// </summary>
-        /// <param name="tilesData"></param>
-        /// <param name="leftOrRight"></param>
-        private void MoveSideToSide(List<TilesData> tilesData, EMoveTiles eMoveTiles)
+        private void MoveSideToSide(EMoveTiles eMoveTiles)
         {
-            for (int i = tilesData.Count - 1; i >= 0; i--)
+            if (!currentTileSetData.Any()) return;
+            int shiftLeftOrRight = eMoveTiles == EMoveTiles.ERight ? 1 : -1;
+            
+            for (int i = currentTileSetData.Count - 1; i >= 0; i--)
             {
-                if (CheckIfTileCanMoveSideWays(tilesData[i].posY, tilesData[i].posX, eMoveTiles))
+                if (CheckIfTileCanMoveSideWays(currentTileSetData[i].posY, currentTileSetData[i].posX, eMoveTiles))
                 {
                     Debug.LogWarning("moved to the side!");
-                    board[tilesData[i].posY][tilesData[i].posX] = 0;
-                    tilesData[i].SetPosition(++tilesData[i].posX, tilesData[i].posY);
-                    MapGridFromUIGrid(tilesData[i].posX, tilesData[i].posY, false);
+                    board[currentTileSetData[i].posY][currentTileSetData[i].posX] = 0;
+                    currentTileSetData[i].SetPosition(currentTileSetData[i].posX += shiftLeftOrRight, currentTileSetData[i].posY);
+                    MapGridFromUIGrid(currentTileSetData[i].posX, currentTileSetData[i].posY, false);
+                }
+                else
+                {
+                    break;
                 }
             }
+            UpdateGraphics.Invoke(currentTileSetData);
+            PrintAllDataFromArray();
+        }
+
+        private void ClearCurrentTileSet()
+        {
+            currentTileSetData.Clear();
         }
         public List<int[]> GetGrid()
         {
@@ -101,10 +134,9 @@ namespace TetrisBoard
             Debug.Log(someBuilder);
         }
 
-        public void CheckForRowPair(out List<int> pairNumbers)
+        public bool CheckForRowPair()
         {
-            pairNumbers = new List<int>();
-            if (!IsEmpty()) return;
+            bool foundRowPair = false;
             int sameValues = 0;
             for (int i = 0; i < rows; i++)
             {
@@ -124,42 +156,38 @@ namespace TetrisBoard
                     //Make that row zero
                     if (sameValues == cols - 1)
                     {
-                        pairNumbers.Add(i);
                         for (int k = 0; k < cols; k++)
                         {
                             board[i][k] = 0;
+                            UpdateRunTimeList?.Invoke(i, k);
+                            foundRowPair = true;
                         }
                     }
                 }
                 sameValues = 0;
             }
+
+            return foundRowPair;
         }
 
-        public bool CheckIfTileCanMoveDown(int lastPosDestroyed)
-        {
-            bool spaceUnder = false;
-            for (int i = 0; i < rows; i++)
-            {
-                if (i >= lastPosDestroyed) break;
-                int nextRow = i + 1;
-                if(nextRow >= rows) break;
-                //If the row is empty, return true
-                if (board[nextRow][0]== 0)
-                {
-                    spaceUnder = true;
-                }
-                else
-                {
-                    spaceUnder = false;
-                }
-            }
-            return spaceUnder;
-        }
-        
         private bool CheckIfTileCanMoveDown(int rowPos, int columnPos)
         {
-            if (rowPos + 1 >= rows) return false;
-            return board[rowPos + 1][columnPos] == 0;
+            if (rowPos + 1 >= rows)
+            {
+                GotBlocked?.Invoke();
+                Debug.LogWarning("Hit the bottom of the board!");
+                hasHitSomething = true;
+                return false;
+            }
+
+            if (board[rowPos + 1][columnPos] != 0)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
         
         private bool CheckIfTileCanMoveSideWays(int rowPos, int columnPos, EMoveTiles eMoveTiles)
@@ -167,58 +195,30 @@ namespace TetrisBoard
             switch (eMoveTiles)
             {
                 case EMoveTiles.ELeft:
-                    if (columnPos - 1 <= cols) return false;
+                    if (columnPos - 1 < 0) return false;
                     return board[rowPos][columnPos - 1] == 0;
                     break;
                 case EMoveTiles.ERight:
                     if (columnPos + 1 >= cols) return false;
                     return board[rowPos][columnPos + 1] == 0;
-                    break;
                 default: return false;
-                    break;
             }
         }
 
-        public void MoveAllTilesDownOneStep(int rowsEmpty, out List<int> rowsDeleted)
+        public void MoveAllTilesDownOneStep()
         {
-            List<int[]> tempList = new List<int[]>();
-            rowsDeleted = new List<int>();
-
-            if (rowsEmpty == 1)
-            {
-                tempList.Add(new int[cols]);
-            }
-            else
-            {
-                for (int i = 0; i < rowsEmpty; i++)
-                {
-                    tempList.Add(new int[cols]);
-                }
-            }
-
-            bool found = false;
-
             //Copy all the non zero rows into the temporary list
-            for (int i = 0; i < rows; i++)
+            for (int i = rows - 1; i > 0; i++)
             {
                 for (int j = 0; j < cols; j++)
                 {
-                    found = board[i][j] != 0;
-                    if (found)
+                    if (CheckIfTileCanMoveDown(i, j))
                     {
-                        break;
+                        board[i + 1][j] = board[i][j];
+                        board[i][j] = 0;
                     }
                 }
-                if (found)
-                {
-                    tempList.Add(board[i]);
-                }
-                else
-                {
-                    rowsDeleted.Add(i);
-                }
             }
-            board = tempList;
         }
 
         public int CalculateStepsTileCanMove(int rowStartPos, int columnPos, List<Tile[]> tilesList)
@@ -239,20 +239,10 @@ namespace TetrisBoard
 
             return stepsToMove;
         }
-
-        public bool IsEmpty()
-        {
-            if (board.Any(p => p[0] > 0) )
-            {
-                return false;
-            }
-            Debug.Log("The board is empty");
-            return true;
-        }
-        enum EMoveTiles
-        {
-            ERight,
-            ELeft
-        }
+    }
+    public enum EMoveTiles
+    {
+        ERight,
+        ELeft
     }
 }

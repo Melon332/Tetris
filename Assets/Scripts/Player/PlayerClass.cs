@@ -3,15 +3,17 @@ using UnityEngine;
 
 namespace Player
 {
+    [RequireComponent(typeof(PlayerInput))]
+    [RequireComponent(typeof(PlayerScore))]
     public class PlayerClass : MonoBehaviour
     {
-        public PlayerInput PlayerInput { get; private set; }
-        public PlayerScore PlayerScore { get; private set; }
+        public PlayerInput PlayerInputClass { get; private set; }
+        public PlayerScore PlayerScoreClass { get; private set; }
 
-        private void Start()
+        private void Awake()
         {
-            PlayerInput = gameObject.AddComponent<PlayerInput>();
-            PlayerScore = gameObject.AddComponent<PlayerScore>();
+            PlayerInputClass = GetComponent<PlayerInput>();
+            PlayerScoreClass = GetComponent<PlayerScore>();
         }
     }
 }

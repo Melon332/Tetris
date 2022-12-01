@@ -20,16 +20,15 @@ namespace Managers
 
         private List<Tile[]> runtimeTileList;
 
-        //TODO: Make this a list afterwards
-        [SerializeField] private Tile tilesList;
-        
         [SerializeField] private int stepsPerSecond = 0; //TODO: Use this when we implement the update loop for moving the tile by itself
-
-        public static int YAxisEnd = 0;
 
         private PlayerClass player;
 
         private List<Tile> CurrentTileSet = new List<Tile>();
+        
+        [SerializeField] private List<Tile> tilesList;
+
+        [SerializeField] private Transform boardObject;
         
         
 
@@ -41,7 +40,17 @@ namespace Managers
 
             player = FindObjectOfType<PlayerClass>();
 
-            SpawnTileSet(tilesList);
+            player.PlayerInputClass.OnDownPressed += PlayerInputMoveTilesDown;
+            player.PlayerInputClass.OnLeftPressed += PlayerInputMoveTilesSideWays;
+            player.PlayerInputClass.OnRightPressed += PlayerInputMoveTilesSideWays;
+
+            tetrisBoard.UpdateGraphics += UpdateTileSetPosition;
+            
+            tetrisBoard.GotBlocked += ClearRunTimeTileSet;
+            tetrisBoard.GotBlocked += SpawnTileSet;
+            tetrisBoard.UpdateRunTimeList += RemoveElementFromRunTimeList;
+
+            SpawnTileSet();
             
             tetrisBoard.PrintAllDataFromArray();
         }
@@ -91,45 +100,64 @@ namespace Managers
         /// <param name="posY"></param>
         private void SpawnTile(Vector2 pos, int posX, int posY)
         {
-            var tile = Instantiate(tilesList);
+            int randomTile = Random.Range(0, tilesList.Count - 1);
+            var tile = Instantiate(tilesList[randomTile]);
             var gameObject = tile.gameObject;
             gameObject.name = $"tile[{posY}][{posX}]";
             gameObject.transform.transform.position = new Vector3(pos.x, pos.y, 0);
             runtimeTileList[posY][posX] = tile;
         }
 
-        private void SpawnTileSet(Tile tileToSpawn)
+        private void SpawnTileSet()
         {
+            if (CurrentTileSet.Any()) return;
             //Everytime we instaniate a new tile, we should set the y axis to zero as
             //All tiles have different y values
-            YAxisEnd = 0;
             if (StartPosition == null)
             {
                 Debug.LogWarning("You forgot to add a start location for the tiles! Exiting...");
                 return;
             }
+            eShape selectedShape = eShape.eShapeMAX;
             //Initalize the tile to start from the left top
             for (int i = 0; i < 4; i++)
             {
-                var tile = Instantiate(tileToSpawn);
-                tile.Init();
-                tile.SetPosition(StartPosition.transform.position.x, StartPosition.transform.position.y - i);
+                var tile = Instantiate(GetRandomizedTile(), boardObject);
+                switch (tile.selectedShape)
+                {
+                    case eShape.eIShape:                
+                        tile.Init();
+                        tile.SetPosition(StartPosition.transform.position.x, StartPosition.transform.position.y - i);
+                        selectedShape = tile.selectedShape;
+                        break;
+                }
                 CurrentTileSet.Add(tile);
             }
-            tetrisBoard.SpawnDataTile(eShape.eIShape);
             
-            InitalizeCurrentTileSet(tetrisBoard.GetCurrentTileSetData());
+            tetrisBoard.SpawnDataTile(selectedShape);
         }
 
-        private void InitalizeCurrentTileSet(List<TilesData> tilesData)
+        private void UpdateTileSetPosition(List<TilesData> tilesData)
         {
             if (!CurrentTileSet.Any()) return;
             for (int i = 0; i < tilesData.Count; i++)
             {
                 CurrentTileSet[i].SetTileData(tilesData[i]);
-                Debug.LogWarning($"Just to make sure it actually worked: posX: {CurrentTileSet[i].GetTilesData().posX} and posY: {CurrentTileSet[i].GetTilesData().posY}");
-                CurrentTileSet[i].SetPosition(StartPosition.transform.position.x - CurrentTileSet[i].GetTilesData().posX, StartPosition.transform.position.y - CurrentTileSet[i].GetTilesData().posY );
+                CurrentTileSet[i].SetPosition(StartPosition.transform.position.x + tilesData[i].posX, StartPosition.transform.position.y - tilesData[i].posY);
+                UpdateRunTimeList(tilesData[i].posX, tilesData[i].posY, CurrentTileSet[i]);
             }
+        }
+
+        private void ClearRunTimeTileSet()
+        {
+            CurrentTileSet.Clear();
+            CheckRowPairs();
+            MoveTilesDown();
+        }
+
+        private void UpdateRunTimeList(int posX, int posY, Tile tile)
+        {
+            runtimeTileList[posY][posX] = tile;
         }
 
         private void InitalizeTileList()
@@ -141,43 +169,43 @@ namespace Managers
             }
         }
 
+        private void PlayerInputMoveTilesDown()
+        {
+            tetrisBoard.PlayerInputMoveDown.Invoke();
+        }
+
+        private void PlayerInputMoveTilesSideWays(EMoveTiles eMoveTiles)
+        {
+            tetrisBoard.PlayerInputMoveSideWays?.Invoke(eMoveTiles);
+        }
+
         [ContextMenu("Print data")]
         private void TestMethod()
         {
             tetrisBoard.PrintAllDataFromArray();
         }
 
-        private void CheckRowPairs(out List<int> tiles)
+        private bool CheckRowPairs()
         {
-            tetrisBoard.CheckForRowPair(out List<int> tileRowBroken);
+            return tetrisBoard.CheckForRowPair();
+        }
 
-            tiles = tileRowBroken;
-            for (int i = 0; i < tileRowBroken.Count; i++)
-            {
-                for (int j = 0; j < colAmount; j++)
-                {
-                    Debug.LogWarning("destroyed");
-                    Destroy(runtimeTileList[tileRowBroken[i]][j].gameObject);
-                    runtimeTileList[tileRowBroken[i]][j] = null;
-                }
-            }
+        private void RemoveElementFromRunTimeList(int posY, int posX)
+        {
+            Destroy(runtimeTileList[posY][posX].gameObject);
+            runtimeTileList[posY][posX] = null;
         }
 
         /// <summary>
         /// Moves tiles down after a successful row pair
         /// </summary>
         /// <param name="tileRowBroken"></param>
-        private void MoveTilesDown(List<int> tileRowBroken = null)
+        private void MoveTilesDown()
         {
-            if (tileRowBroken == null || tileRowBroken.Count == 0) return;
-            //^1 is equal to the end of the list so its basically tileRowBroken.Count - 1
-            if (tetrisBoard.CheckIfTileCanMoveDown(tileRowBroken[^1]))
-            {
-                List<int> rowDeleted = new List<int>();
-                tetrisBoard.MoveAllTilesDownOneStep(tileRowBroken.Count, out rowDeleted);
-
-                MoveTiles();
-            }
+            if (!CheckRowPairs()) return;
+            tetrisBoard.MoveAllTilesDownOneStep();
+            MoveTiles();
+            
         }
 
         private void MoveTiles()
@@ -211,6 +239,29 @@ namespace Managers
                     runtimeTileList[i][j] = null;
                 }
             }
+        }
+
+        private Tile GetRandomizedTile()
+        {
+            if (!tilesList.Any())
+            {
+                Debug.LogError("You need atleast one tile in the tile list to be able to generate a tile!");
+                return null;
+            }
+            int randomizedTileInt = Random.Range(0, tilesList.Count - 1);
+            return tilesList[randomizedTileInt];
+        }
+
+        private void OnDisable()
+        {
+            player.PlayerInputClass.OnDownPressed -= PlayerInputMoveTilesDown;
+            player.PlayerInputClass.OnLeftPressed-= PlayerInputMoveTilesSideWays;
+            player.PlayerInputClass.OnRightPressed -= PlayerInputMoveTilesSideWays;
+
+            tetrisBoard.UpdateGraphics -= UpdateTileSetPosition;
+            tetrisBoard.GotBlocked -= ClearRunTimeTileSet;
+            tetrisBoard.GotBlocked -= SpawnTileSet;
+
         }
     }
 }

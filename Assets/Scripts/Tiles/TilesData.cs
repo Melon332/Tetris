@@ -10,7 +10,8 @@ namespace Tiles
         eTShape = 3,
         eSShape = 4,
         eZShape = 5,
-        eJShape = 6
+        eJShape = 6,
+        eShapeMAX = 7 // default
     }
     
     public class TilesData

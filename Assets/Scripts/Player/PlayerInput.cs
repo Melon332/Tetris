@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Inputs;
+using TetrisBoard;
 
 namespace Player
 {
@@ -9,8 +10,8 @@ namespace Player
     {
         private TetrisInput inputs;
 
-        public Action<int> OnLeftPressed;
-        public Action<int> OnRightPressed;
+        public Action<EMoveTiles> OnLeftPressed;
+        public Action<EMoveTiles> OnRightPressed;
         public Action OnDownPressed;
 
         private void Start()
@@ -24,8 +25,7 @@ namespace Player
         {
             if (context.phase == InputActionPhase.Started)
             {
-                OnLeftPressed?.Invoke(-1);
-                Debug.LogWarning("I pressed left once!");
+                OnLeftPressed?.Invoke(EMoveTiles.ELeft);
             }
         }
 
@@ -33,8 +33,7 @@ namespace Player
         {
             if (context.phase == InputActionPhase.Started)
             {
-                OnRightPressed?.Invoke(1);
-                Debug.LogWarning("I pressed right once!");
+                OnRightPressed?.Invoke(EMoveTiles.ERight);
             }
         }
 
@@ -43,7 +42,6 @@ namespace Player
             if (context.phase == InputActionPhase.Started)
             {
                 OnDownPressed?.Invoke();
-                Debug.LogWarning("I pressed down once!");
             }
         }
     }

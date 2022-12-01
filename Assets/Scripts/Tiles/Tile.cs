@@ -24,7 +24,7 @@ namespace Tiles
                     break;
             }
         }
-        public void MoveTile(int posY, int newPosY)
+        public void MoveTile(int posY)
         {
             tileTransform.position = new Vector3(tileTransform.position.x, tileTransform.position.y - posY , 0);
             gameObject.name = $"tile[{tileData.posY}][{tileData.posX}]";

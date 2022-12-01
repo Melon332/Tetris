@@ -76,11 +76,11 @@ namespace Managers
                     SpawnTile(new Vector2(startPos.x + columns, startPos.y + rows), columns, rows);
                     if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
                     {
-                        tetrisBoard.MapGridFromUIGrid(columns, rows, false);
+                        tetrisBoard.MapTileDataToGrid(columns, rows, false);
                     }
                     else
                     {
-                        tetrisBoard.MapGridFromUIGrid(columns, rows, true);
+                        tetrisBoard.MapTileDataToGrid(columns, rows, true);
                     }
                 }
 
@@ -118,22 +118,25 @@ namespace Managers
                 Debug.LogWarning("You forgot to add a start location for the tiles! Exiting...");
                 return;
             }
-            eShape selectedShape = eShape.eShapeMAX;
+            
+            eShape selectedShape = eShape.eIShape;
             //Initalize the tile to start from the left top
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i <= 3; i++)
             {
                 var tile = Instantiate(GetRandomizedTile(), boardObject);
                 switch (tile.selectedShape)
                 {
-                    case eShape.eIShape:                
+                    case eShape.eIShape:
                         tile.Init();
-                        tile.SetPosition(StartPosition.transform.position.x, StartPosition.transform.position.y - i);
+                        tile.SetPosition(StartPosition.transform.position.x,
+                            StartPosition.transform.position.y - i);
                         selectedShape = tile.selectedShape;
                         break;
                 }
+
                 CurrentTileSet.Add(tile);
             }
-            
+
             tetrisBoard.SpawnDataTile(selectedShape);
         }
 
@@ -144,15 +147,20 @@ namespace Managers
             {
                 CurrentTileSet[i].SetTileData(tilesData[i]);
                 CurrentTileSet[i].SetPosition(StartPosition.transform.position.x + tilesData[i].posX, StartPosition.transform.position.y - tilesData[i].posY);
-                UpdateRunTimeList(tilesData[i].posX, tilesData[i].posY, CurrentTileSet[i]);
             }
         }
 
         private void ClearRunTimeTileSet()
         {
+            for (int i = 0; i < CurrentTileSet.Count; i++)
+            {
+                UpdateRunTimeList(CurrentTileSet[i].GetTilesData().posX, CurrentTileSet[i].GetTilesData().posY, CurrentTileSet[i]);
+            }
             CurrentTileSet.Clear();
-            CheckRowPairs();
-            MoveTilesDown();
+            if (tetrisBoard.CheckForRowPair())
+            {
+                MoveTilesDown();
+            }
         }
 
         private void UpdateRunTimeList(int posX, int posY, Tile tile)
@@ -185,13 +193,13 @@ namespace Managers
             tetrisBoard.PrintAllDataFromArray();
         }
 
-        private bool CheckRowPairs()
-        {
-            return tetrisBoard.CheckForRowPair();
-        }
-
         private void RemoveElementFromRunTimeList(int posY, int posX)
         {
+            if (!runtimeTileList[posY][posX])
+            {
+                Debug.LogWarning("Error!");
+                return;
+            }
             Destroy(runtimeTileList[posY][posX].gameObject);
             runtimeTileList[posY][posX] = null;
         }
@@ -199,13 +207,9 @@ namespace Managers
         /// <summary>
         /// Moves tiles down after a successful row pair
         /// </summary>
-        /// <param name="tileRowBroken"></param>
         private void MoveTilesDown()
         {
-            if (!CheckRowPairs()) return;
-            tetrisBoard.MoveAllTilesDownOneStep();
             MoveTiles();
-            
         }
 
         private void MoveTiles()
@@ -215,27 +219,47 @@ namespace Managers
                 for (int j = 0; j < colAmount; j++)
                 {
                     if (runtimeTileList[i][j] == null) continue;
-                    int stepsToMove = tetrisBoard.CalculateStepsTileCanMove(i, j, runtimeTileList);
-                    runtimeTileList[i][j].MoveTile(stepsToMove, i - stepsToMove);
-                    Debug.LogWarning($"The tile of row: {i} and column {j} moved: {stepsToMove}");
+                    int stepsToMove = CalculateStepsTillTileIsAtBottom(i, j);
+                    runtimeTileList[i][j].GetTilesData().SetPosition(j, stepsToMove);
+                    runtimeTileList[i][j].SetPosition(StartPosition.transform.position.x + runtimeTileList[i][j].GetTilesData().posX, StartPosition.transform.position.y - runtimeTileList[i][j].GetTilesData().posY);
+                    //Debug.LogWarning($"The tile of row: {i} and column {j} moved: {stepsToMove}");
                 }
             }
             SortRunTimeTileList();
         }
+        private int CalculateStepsTillTileIsAtBottom(int rowStartPos, int columnPos)
+        {
+            if (runtimeTileList[rowStartPos][columnPos] == null)
+            {
+                Debug.LogWarning("The specified tile is currently empty!");
+                return 0;
+            }
+
+            int stepsToMove = rowStartPos;
+            for (int i = rowStartPos; i < rowAmount; i++)
+            {
+                if (i + 1 >= rowAmount) break;
+                if (runtimeTileList[i + 1][columnPos] == null)
+                {
+                    stepsToMove++;
+                }
+            }
+
+            return stepsToMove;
+        }
 
         private void SortRunTimeTileList()
         {
-            for (int i = 1; i < rowAmount; i++)
+            //Copy all the non zero rows into the temporary list
+            for (int i = rowAmount - 1; i > 0; i--)
             {
                 for (int j = 0; j < colAmount; j++)
                 {
-                    Tile currentTile = runtimeTileList[i][j];
-                    if(currentTile == null) continue;
-                    
-                    //Get the tiles data to access the x and y position of the current tile.
-                    //They are stored and changed when the tile gets moved.
-                    TilesData data = currentTile.GetTilesData();
-                    runtimeTileList[data.posY][data.posX] = currentTile;
+                    if (i + 1 >= rowAmount) break;
+                    if (runtimeTileList[i][j] == null) continue;
+                    int newPos = CalculateStepsTillTileIsAtBottom(i, j);
+                    Debug.Log($"The tile at {i} and {j} was moved to {newPos} and {j}");
+                    runtimeTileList[newPos][j] = runtimeTileList[i][j];
                     runtimeTileList[i][j] = null;
                 }
             }

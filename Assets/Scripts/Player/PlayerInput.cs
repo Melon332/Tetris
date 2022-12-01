@@ -23,7 +23,7 @@ namespace Player
 
         public void OnLeft(InputAction.CallbackContext context)
         {
-            if (context.phase == InputActionPhase.Started)
+            if (context.phase == InputActionPhase.Performed)
             {
                 OnLeftPressed?.Invoke(EMoveTiles.ELeft);
             }
@@ -31,7 +31,7 @@ namespace Player
 
         public void OnRight(InputAction.CallbackContext context)
         {
-            if (context.phase == InputActionPhase.Started)
+            if (context.phase == InputActionPhase.Performed)
             {
                 OnRightPressed?.Invoke(EMoveTiles.ERight);
             }
@@ -39,7 +39,7 @@ namespace Player
 
         public void OnDown(InputAction.CallbackContext context)
         {
-            if (context.phase == InputActionPhase.Started)
+            if (context.phase == InputActionPhase.Performed)
             {
                 OnDownPressed?.Invoke();
             }

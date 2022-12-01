@@ -223,7 +223,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 493717069}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -7, y: 0, z: -0.13448319}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -329,9 +329,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StartPosition: {fileID: 991914830}
   rowAmount: 15
-  colAmount: 9
-  tilesList: {fileID: 1223158953791226185, guid: e39e7b0426ef58d42bdd328436016bfc, type: 3}
+  colAmount: 3
   stepsPerSecond: 0
+  tilesList:
+  - {fileID: 1223158953791226185, guid: e39e7b0426ef58d42bdd328436016bfc, type: 3}
+  boardObject: {fileID: 493717070}
 --- !u!1 &536869316
 GameObject:
   m_ObjectHideFlags: 0
@@ -515,6 +517,8 @@ GameObject:
   m_Component:
   - component: {fileID: 917474307}
   - component: {fileID: 917474306}
+  - component: {fileID: 917474309}
+  - component: {fileID: 917474308}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -549,6 +553,30 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &917474308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 917474305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 425f239640638ec45bc077724c032035, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &917474309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 917474305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75fa6fdee74b0b54c9978e9de4b08e94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &991914829
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Tiles
@@ -5,19 +6,27 @@ namespace Tiles
     public class Tile : MonoBehaviour
     {
         private Transform tileTransform;
-        [SerializeField] private eShape selectedShape;
+        public eShape selectedShape;
         private TilesData tileData;
 
-        public void Init(int posX, int posY)
-        {
-            tileData = new TilesData(selectedShape, posX, posY);
-            tileTransform = GetComponent<Transform>();
-        }
+        public int lengthOnYAxis { private set; get; }
 
-        public void MoveTile(int posY, int newPosY)
+        public void Init()
+        {
+            tileTransform = GetComponent<Transform>();
+
+            switch (selectedShape)
+            {
+                case eShape.eIShape:
+                    lengthOnYAxis = 3;
+                    break;
+                default: Debug.LogWarning("The specified shape doesn't exist or isn't in the switch case");
+                    break;
+            }
+        }
+        public void MoveTile(int posY)
         {
             tileTransform.position = new Vector3(tileTransform.position.x, tileTransform.position.y - posY , 0);
-            tileData.posY = newPosY;
             gameObject.name = $"tile[{tileData.posY}][{tileData.posX}]";
         }
 
@@ -26,9 +35,20 @@ namespace Tiles
             tileTransform.position = new Vector3(posX, posY , 0);
         }
 
+        public void UpdatePosition()
+        {
+            if (tileData == null) return;
+            tileTransform.position = new Vector3(tileData.posX, tileData.posY , 0);
+        }
+
         public TilesData GetTilesData()
         {
             return tileData;
+        }
+
+        public void SetTileData(TilesData data)
+        {
+            tileData = data;
         }
 
         [ContextMenu("PrintData")]

@@ -12,6 +12,7 @@ namespace Managers
     public class GameManager : MonoBehaviour
     {
         private Board tetrisBoard;
+        private TileManager tileManager;
 
         [SerializeField] private Transform StartPosition;
 
@@ -33,12 +34,15 @@ namespace Managers
         [SerializeField] private List<TileSetData> allTileSetData = new List<TileSetData>();
         
         
+        
+        
 
         void Start()
         {
             InitalizeTileList();
 
             tetrisBoard = new Board(colAmount, rowAmount);
+            tileManager = new TileManager(tetrisBoard);
 
             player = FindObjectOfType<PlayerClass>();
 
@@ -56,42 +60,7 @@ namespace Managers
             
             tetrisBoard.PrintAllDataFromArray();
         }
-        /*
-        tetrisBoard.PrintAllDataFromArray();
-        CheckRowPairs(out List<int> rowsBroke);
 
-
-        tetrisBoard.PrintAllDataFromArray();
-
-        MoveTilesDown(rowsBroke);
-        tetrisBoard.PrintAllDataFromArray();
-        */
-
-        private void SpawnGrid()
-        {
-            Vector2 startPos = new Vector2(-4, 0);
-            int valueOfGrid = 1;     
-            for (int rows = 0; rows < rowAmount; rows++)
-            {
-                for (int columns = 0; columns < colAmount; columns++)
-                {
-                    SpawnTile(new Vector2(startPos.x + columns, startPos.y + rows), columns, rows);
-                    if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
-                    {
-                        tetrisBoard.MapTileDataToGrid(columns, rows, false);
-                    }
-                    else
-                    {
-                        tetrisBoard.MapTileDataToGrid(columns, rows, true);
-                    }
-                }
-
-                valueOfGrid++;
-            }
-            
-        }
-
-        
         /// <summary>
         /// This is for testing purposes.
         /// Will spawn a tile at the specified vector2
@@ -121,7 +90,7 @@ namespace Managers
                 return;
             }
 
-            var randomizedTileSet = GetTileSetDataSpecifiedWithNumber(2);
+            var randomizedTileSet = GetRandomizedTileSetData();
             //Initalize the tile to start from the left top
             for (int i = 0; i < randomizedTileSet.GetTileListCount(); i++)
             {
@@ -267,7 +236,7 @@ namespace Managers
                 Debug.LogError("You need atleast one tile in the tile list to be able to generate a tile!");
                 return null;
             }
-            int randomizedTileInt = Random.Range(0, tilesList.Count - 1);
+            int randomizedTileInt = Random.Range(0, tilesList.Count);
             return tilesList[randomizedTileInt];
         }
         
@@ -278,7 +247,7 @@ namespace Managers
                 Debug.LogError("You need atleast one tile in the tile list to be able to generate a tile!");
                 return null;
             }
-            int randomizedTileInt = Random.Range(0, allTileSetData.Count - 1);
+            int randomizedTileInt = Random.Range(0, allTileSetData.Count);
             return allTileSetData[randomizedTileInt];
         }
 
@@ -298,6 +267,30 @@ namespace Managers
             tetrisBoard.GotBlocked -= ClearRunTimeTileSet;
             tetrisBoard.GotBlocked -= SpawnTileSet;
 
+        }
+        
+        private void SpawnGrid()
+        {
+            Vector2 startPos = new Vector2(-4, 0);
+            int valueOfGrid = 1;     
+            for (int rows = 0; rows < rowAmount; rows++)
+            {
+                for (int columns = 0; columns < colAmount; columns++)
+                {
+                    SpawnTile(new Vector2(startPos.x + columns, startPos.y + rows), columns, rows);
+                    if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
+                    {
+                        tetrisBoard.MapTileDataToGrid(columns, rows, false);
+                    }
+                    else
+                    {
+                        tetrisBoard.MapTileDataToGrid(columns, rows, true);
+                    }
+                }
+
+                valueOfGrid++;
+            }
+            
         }
     }
 }

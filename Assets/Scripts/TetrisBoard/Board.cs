@@ -50,7 +50,7 @@ namespace TetrisBoard
         {
             TilesData tempData = new TilesData(shape, posX, posY);
             currentTileSetData.Add(tempData);
-            MapTileDataToGrid(currentTileSetData[i].posX, posY, false);
+            MapTileDataToGrid(posX, posY, false);
 
             if (!PlayerLost())
             {
@@ -245,7 +245,6 @@ namespace TetrisBoard
                     if (CheckIfTileCanMoveDown(i, j, false))
                     {
                         int newPos = CalculateStepsTillTileIsAtBottom(i, j);
-                        Debug.Log($"The tile at {i} and {j} was moved to {newPos} and {j}");
                         board[i][j] = 0;
                         board[newPos][j] = 1;
                     }

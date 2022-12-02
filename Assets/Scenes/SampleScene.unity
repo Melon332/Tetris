@@ -329,11 +329,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StartPosition: {fileID: 991914830}
   rowAmount: 15
-  colAmount: 3
+  colAmount: 12
   stepsPerSecond: 0
   tilesList:
   - {fileID: 1223158953791226185, guid: e39e7b0426ef58d42bdd328436016bfc, type: 3}
   boardObject: {fileID: 493717070}
+  allTileSetData:
+  - shape: 2
+    tilePosition:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 0, y: 2}
+    - {x: 0, y: 3}
+  - shape: 0
+    tilePosition:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 0, y: 2}
+    - {x: 0, y: 3}
+    - {x: 1, y: 3}
+  - shape: 1
+    tilePosition:
+    - {x: 0, y: 0}
+    - {x: 0, y: 1}
+    - {x: 1, y: 0}
+    - {x: 1, y: 1}
 --- !u!1 &536869316
 GameObject:
   m_ObjectHideFlags: 0

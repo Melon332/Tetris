@@ -29,6 +29,8 @@ namespace Managers
         [SerializeField] private List<Tile> tilesList;
 
         [SerializeField] private Transform boardObject;
+
+        [SerializeField] private List<TileSetData> allTileSetData = new List<TileSetData>();
         
         
 
@@ -118,26 +120,19 @@ namespace Managers
                 Debug.LogWarning("You forgot to add a start location for the tiles! Exiting...");
                 return;
             }
-            
-            eShape selectedShape = eShape.eIShape;
+
+            var randomizedTileSet = GetTileSetDataSpecifiedWithNumber(2);
             //Initalize the tile to start from the left top
-            for (int i = 0; i <= 3; i++)
+            for (int i = 0; i < randomizedTileSet.GetTileListCount(); i++)
             {
                 var tile = Instantiate(GetRandomizedTile(), boardObject);
-                switch (tile.selectedShape)
-                {
-                    case eShape.eIShape:
-                        tile.Init();
-                        tile.SetPosition(StartPosition.transform.position.x,
-                            StartPosition.transform.position.y - i);
-                        selectedShape = tile.selectedShape;
-                        break;
-                }
+                tile.Init();
+                tile.SetPosition(StartPosition.transform.position.x + randomizedTileSet.GetTilePositionAtSpecifiedLocation(i).x, 
+                    StartPosition.transform.position.y - randomizedTileSet.GetTilePositionAtSpecifiedLocation(i).y);
+                tetrisBoard.SpawnDataTile(tile.selectedShape, (int)randomizedTileSet.tilePosition[i].x, (int)randomizedTileSet.tilePosition[i].y, i);
 
                 CurrentTileSet.Add(tile);
             }
-
-            tetrisBoard.SpawnDataTile(selectedShape);
         }
 
         private void UpdateTileSetPosition(List<TilesData> tilesData)
@@ -179,7 +174,7 @@ namespace Managers
 
         private void PlayerInputMoveTilesDown()
         {
-            tetrisBoard.PlayerInputMoveDown.Invoke();
+            tetrisBoard.PlayerInputMoveDown?.Invoke();
         }
 
         private void PlayerInputMoveTilesSideWays(EMoveTiles eMoveTiles)
@@ -190,7 +185,7 @@ namespace Managers
         [ContextMenu("Print data")]
         private void TestMethod()
         {
-            tetrisBoard.PrintAllDataFromArray();
+            tetrisBoard?.PrintAllDataFromArray();
         }
 
         private void RemoveElementFromRunTimeList(int posY, int posX)
@@ -274,6 +269,23 @@ namespace Managers
             }
             int randomizedTileInt = Random.Range(0, tilesList.Count - 1);
             return tilesList[randomizedTileInt];
+        }
+        
+        private TileSetData GetRandomizedTileSetData()
+        {
+            if (!tilesList.Any())
+            {
+                Debug.LogError("You need atleast one tile in the tile list to be able to generate a tile!");
+                return null;
+            }
+            int randomizedTileInt = Random.Range(0, allTileSetData.Count - 1);
+            return allTileSetData[randomizedTileInt];
+        }
+
+        private TileSetData GetTileSetDataSpecifiedWithNumber(int position)
+        {
+            if (position > allTileSetData.Count) return null;
+            return allTileSetData[position];
         }
 
         private void OnDisable()

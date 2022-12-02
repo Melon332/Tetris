@@ -12,6 +12,7 @@ namespace Managers
     public class GameManager : MonoBehaviour
     {
         private Board tetrisBoard;
+        private TileManager tileManager;
 
         [SerializeField] private Transform StartPosition;
 
@@ -29,6 +30,10 @@ namespace Managers
         [SerializeField] private List<Tile> tilesList;
 
         [SerializeField] private Transform boardObject;
+
+        [SerializeField] private List<TileSetData> allTileSetData = new List<TileSetData>();
+        
+        
         
         
 
@@ -37,6 +42,7 @@ namespace Managers
             InitalizeTileList();
 
             tetrisBoard = new Board(colAmount, rowAmount);
+            tileManager = new TileManager(tetrisBoard);
 
             player = FindObjectOfType<PlayerClass>();
 
@@ -54,42 +60,7 @@ namespace Managers
             
             tetrisBoard.PrintAllDataFromArray();
         }
-        /*
-        tetrisBoard.PrintAllDataFromArray();
-        CheckRowPairs(out List<int> rowsBroke);
 
-
-        tetrisBoard.PrintAllDataFromArray();
-
-        MoveTilesDown(rowsBroke);
-        tetrisBoard.PrintAllDataFromArray();
-        */
-
-        private void SpawnGrid()
-        {
-            Vector2 startPos = new Vector2(-4, 0);
-            int valueOfGrid = 1;     
-            for (int rows = 0; rows < rowAmount; rows++)
-            {
-                for (int columns = 0; columns < colAmount; columns++)
-                {
-                    SpawnTile(new Vector2(startPos.x + columns, startPos.y + rows), columns, rows);
-                    if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
-                    {
-                        tetrisBoard.MapTileDataToGrid(columns, rows, false);
-                    }
-                    else
-                    {
-                        tetrisBoard.MapTileDataToGrid(columns, rows, true);
-                    }
-                }
-
-                valueOfGrid++;
-            }
-            
-        }
-
-        
         /// <summary>
         /// This is for testing purposes.
         /// Will spawn a tile at the specified vector2
@@ -118,26 +89,19 @@ namespace Managers
                 Debug.LogWarning("You forgot to add a start location for the tiles! Exiting...");
                 return;
             }
-            
-            eShape selectedShape = eShape.eIShape;
+
+            var randomizedTileSet = GetRandomizedTileSetData();
             //Initalize the tile to start from the left top
-            for (int i = 0; i <= 3; i++)
+            for (int i = 0; i < randomizedTileSet.GetTileListCount(); i++)
             {
                 var tile = Instantiate(GetRandomizedTile(), boardObject);
-                switch (tile.selectedShape)
-                {
-                    case eShape.eIShape:
-                        tile.Init();
-                        tile.SetPosition(StartPosition.transform.position.x,
-                            StartPosition.transform.position.y - i);
-                        selectedShape = tile.selectedShape;
-                        break;
-                }
+                tile.Init();
+                tile.SetPosition(StartPosition.transform.position.x + randomizedTileSet.GetTilePositionAtSpecifiedLocation(i).x, 
+                    StartPosition.transform.position.y - randomizedTileSet.GetTilePositionAtSpecifiedLocation(i).y);
+                tetrisBoard.SpawnDataTile((int)randomizedTileSet.tilePosition[i].x, (int)randomizedTileSet.tilePosition[i].y, i);
 
                 CurrentTileSet.Add(tile);
             }
-
-            tetrisBoard.SpawnDataTile(selectedShape);
         }
 
         private void UpdateTileSetPosition(List<TilesData> tilesData)
@@ -179,7 +143,7 @@ namespace Managers
 
         private void PlayerInputMoveTilesDown()
         {
-            tetrisBoard.PlayerInputMoveDown.Invoke();
+            tetrisBoard.PlayerInputMoveDown?.Invoke();
         }
 
         private void PlayerInputMoveTilesSideWays(EMoveTiles eMoveTiles)
@@ -190,7 +154,7 @@ namespace Managers
         [ContextMenu("Print data")]
         private void TestMethod()
         {
-            tetrisBoard.PrintAllDataFromArray();
+            tetrisBoard?.PrintAllDataFromArray();
         }
 
         private void RemoveElementFromRunTimeList(int posY, int posX)
@@ -258,7 +222,7 @@ namespace Managers
                     if (i + 1 >= rowAmount) break;
                     if (runtimeTileList[i][j] == null) continue;
                     int newPos = CalculateStepsTillTileIsAtBottom(i, j);
-                    Debug.Log($"The tile at {i} and {j} was moved to {newPos} and {j}");
+
                     runtimeTileList[newPos][j] = runtimeTileList[i][j];
                     runtimeTileList[i][j] = null;
                 }
@@ -272,8 +236,25 @@ namespace Managers
                 Debug.LogError("You need atleast one tile in the tile list to be able to generate a tile!");
                 return null;
             }
-            int randomizedTileInt = Random.Range(0, tilesList.Count - 1);
+            int randomizedTileInt = Random.Range(0, tilesList.Count);
             return tilesList[randomizedTileInt];
+        }
+        
+        private TileSetData GetRandomizedTileSetData()
+        {
+            if (!tilesList.Any())
+            {
+                Debug.LogError("You need atleast one tile in the tile list to be able to generate a tile!");
+                return null;
+            }
+            int randomizedTileInt = Random.Range(0, allTileSetData.Count);
+            return allTileSetData[randomizedTileInt];
+        }
+
+        private TileSetData GetTileSetDataSpecifiedWithNumber(int position)
+        {
+            if (position > allTileSetData.Count) return null;
+            return allTileSetData[position];
         }
 
         private void OnDisable()
@@ -286,6 +267,30 @@ namespace Managers
             tetrisBoard.GotBlocked -= ClearRunTimeTileSet;
             tetrisBoard.GotBlocked -= SpawnTileSet;
 
+        }
+        
+        private void SpawnGrid()
+        {
+            Vector2 startPos = new Vector2(-4, 0);
+            int valueOfGrid = 1;     
+            for (int rows = 0; rows < rowAmount; rows++)
+            {
+                for (int columns = 0; columns < colAmount; columns++)
+                {
+                    SpawnTile(new Vector2(startPos.x + columns, startPos.y + rows), columns, rows);
+                    if (rows == 5 || rows == 2 || rows == 3 || rows == 4 || rows == 6 || rows == 7)
+                    {
+                        tetrisBoard.MapTileDataToGrid(columns, rows, false);
+                    }
+                    else
+                    {
+                        tetrisBoard.MapTileDataToGrid(columns, rows, true);
+                    }
+                }
+
+                valueOfGrid++;
+            }
+            
         }
     }
 }

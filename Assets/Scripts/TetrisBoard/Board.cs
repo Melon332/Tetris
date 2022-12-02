@@ -46,15 +46,12 @@ namespace TetrisBoard
         /// </summary>
         /// <param name="shape"></param>
         /// <returns></returns>
-        public void SpawnDataTile(eShape shape)
+        public void SpawnDataTile(int posX, int posY, int i)
         {
-            for (int i = 0; i <= 3; i++)
-            {
-                TilesData tempData = new TilesData(shape, 0, i);
-                currentTileSetData.Add(tempData);
-                MapTileDataToGrid(currentTileSetData[i].posX, i, false);
-            }
-            
+            TilesData tempData = new TilesData( posX, posY);
+            currentTileSetData.Add(tempData);
+            MapTileDataToGrid(posX, posY, false);
+
             if (!PlayerLost())
             {
                 currentTileSetData.Clear();
@@ -69,8 +66,7 @@ namespace TetrisBoard
             {
                 canMove = CheckIfTileCanMoveDown(currentTileSetData[i].posY, currentTileSetData[i].posX, false);
             }
-
-            Debug.Log(canMove);
+            
             return canMove;
         }
         public List<TilesData> GetCurrentTileSetData()
@@ -225,9 +221,17 @@ namespace TetrisBoard
             {
                 case EMoveTiles.ELeft:
                     if (columnPos - 1 < 0) return false;
+                    for (int i = 0; i < currentTileSetData.Count; i++)
+                    {
+                        if (columnPos - 1 == currentTileSetData[i].posX && columnPos - 1 > 0) return true;
+                    }
                     return board[rowPos][columnPos - 1] == 0;
                 case EMoveTiles.ERight:
                     if (columnPos + 1 >= cols) return false;
+                    for (int i = 0; i < currentTileSetData.Count; i++)
+                    {
+                        if (columnPos + 1 == currentTileSetData[i].posX && columnPos + 1 > cols) return true;
+                    }
                     return board[rowPos][columnPos + 1] == 0;
                 default: return false;
             }
@@ -235,7 +239,7 @@ namespace TetrisBoard
 
         private void MoveAllTilesDown()
         {
-            //Copy all the non zero rows into the temporary list
+            //Move all elements down starting from the top aka the top of the list
             for (int i = rows - 1; i > 0; i--)
             {
                 for (int j = 0; j < cols; j++)
@@ -245,7 +249,6 @@ namespace TetrisBoard
                     if (CheckIfTileCanMoveDown(i, j, false))
                     {
                         int newPos = CalculateStepsTillTileIsAtBottom(i, j);
-                        Debug.Log($"The tile at {i} and {j} was moved to {newPos} and {j}");
                         board[i][j] = 0;
                         board[newPos][j] = 1;
                     }
@@ -269,8 +272,6 @@ namespace TetrisBoard
                 {
                     stepsToMove++;
                 }
-
-                Debug.LogWarning(stepsToMove);
             }
 
             return stepsToMove;

@@ -98,7 +98,7 @@ namespace Managers
                 tile.Init();
                 tile.SetPosition(StartPosition.transform.position.x + randomizedTileSet.GetTilePositionAtSpecifiedLocation(i).x, 
                     StartPosition.transform.position.y - randomizedTileSet.GetTilePositionAtSpecifiedLocation(i).y);
-                tetrisBoard.SpawnDataTile(tile.selectedShape, (int)randomizedTileSet.tilePosition[i].x, (int)randomizedTileSet.tilePosition[i].y, i);
+                tetrisBoard.SpawnDataTile((int)randomizedTileSet.tilePosition[i].x, (int)randomizedTileSet.tilePosition[i].y, i);
 
                 CurrentTileSet.Add(tile);
             }
@@ -222,7 +222,7 @@ namespace Managers
                     if (i + 1 >= rowAmount) break;
                     if (runtimeTileList[i][j] == null) continue;
                     int newPos = CalculateStepsTillTileIsAtBottom(i, j);
-                    Debug.Log($"The tile at {i} and {j} was moved to {newPos} and {j}");
+
                     runtimeTileList[newPos][j] = runtimeTileList[i][j];
                     runtimeTileList[i][j] = null;
                 }

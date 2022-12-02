@@ -46,9 +46,9 @@ namespace TetrisBoard
         /// </summary>
         /// <param name="shape"></param>
         /// <returns></returns>
-        public void SpawnDataTile(eShape shape, int posX, int posY, int i)
+        public void SpawnDataTile(int posX, int posY, int i)
         {
-            TilesData tempData = new TilesData(shape, posX, posY);
+            TilesData tempData = new TilesData( posX, posY);
             currentTileSetData.Add(tempData);
             MapTileDataToGrid(posX, posY, false);
 
@@ -221,12 +221,16 @@ namespace TetrisBoard
             {
                 case EMoveTiles.ELeft:
                     if (columnPos - 1 < 0) return false;
+                    for (int i = 0; i < currentTileSetData.Count; i++)
+                    {
+                        if (columnPos - 1 == currentTileSetData[i].posX && columnPos - 1 > 0) return true;
+                    }
                     return board[rowPos][columnPos - 1] == 0;
                 case EMoveTiles.ERight:
                     if (columnPos + 1 >= cols) return false;
                     for (int i = 0; i < currentTileSetData.Count; i++)
                     {
-                        if (columnPos + 1 == currentTileSetData[i].posX) return true;
+                        if (columnPos + 1 == currentTileSetData[i].posX && columnPos + 1 > cols) return true;
                     }
                     return board[rowPos][columnPos + 1] == 0;
                 default: return false;

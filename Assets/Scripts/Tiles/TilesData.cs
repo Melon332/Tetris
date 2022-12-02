@@ -19,13 +19,10 @@ namespace Tiles
         public int posX { set; get; }
         public int posY { set; get; }
 
-        public eShape shape;
-
-        public TilesData(eShape _shape, int _posX, int _posY)
+        public TilesData(int _posX, int _posY)
         {
             posX = _posX;
             posY = _posY;
-            shape = _shape;
         }
 
         public void SetPosition(int _posX, int _posY)
